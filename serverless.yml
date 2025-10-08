@@ -92,11 +92,29 @@ functions:
       - http:
           path: /appointments
           method: post
-          cors: true
+          cors:
+            origin: '*'
+            headers:
+              - Content-Type
+              - X-Amz-Date
+              - Authorization
+              - X-Api-Key
+              - X-Amz-Security-Token
+              - X-Amz-User-Agent
+            allowCredentials: false
       - http:
           path: /appointments/{insuredId}
           method: get
-          cors: true
+          cors:
+            origin: '*'
+            headers:
+              - Content-Type
+              - X-Amz-Date
+              - Authorization
+              - X-Api-Key
+              - X-Amz-Security-Token
+              - X-Amz-User-Agent
+            allowCredentials: false
           request:
             parameters:
               paths:
@@ -126,6 +144,17 @@ functions:
           arn: !GetAtt AppointmentsSqsCL.Arn
           batchSize: 5
 
+  swaggerDocs:
+    handler: src/handlers/swagger.handler
+    events:
+      - http:
+          path: /api-docs
+          method: get
+          # cors: true
+      - http:
+          path: /api-docs/swagger.json
+          method: get
+          # cors: true
 resources:
   Resources:
     ApiGatewayRestApi:

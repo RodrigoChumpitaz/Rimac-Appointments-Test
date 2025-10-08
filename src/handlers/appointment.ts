@@ -8,6 +8,96 @@ import { getAppointmentsUseCase } from '@/core/application/use-cases/GetAppointm
 
 const logger = new Logger('AppointmentHandler');
 
+/**
+ * @swagger
+ * /appointments:
+ *   post:
+ *     summary: Crear nueva cita médica
+ *     description: Endpoint para crear una nueva cita médica para un asegurado
+ *     tags:
+ *       - Appointments
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/CreateAppointmentRequest'
+ *     responses:
+ *       202:
+ *         description: Cita creada exitosamente (procesamiento asíncrono)
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Appointment request submitted successfully"
+ *       400:
+ *         description: Error de validación
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       500:
+ *         description: Error interno del servidor
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ */
+
+/**
+ * @swagger
+ * /appointments/{insuredId}:
+ *   get:
+ *     summary: Obtener citas por asegurado
+ *     description: Obtiene todas las citas médicas de un asegurado específico
+ *     tags:
+ *       - Appointments
+ *     parameters:
+ *       - in: path
+ *         name: insuredId
+ *         required: true
+ *         schema:
+ *           type: string
+ *           pattern: '^[0-9]{5}$'
+ *         description: ID del asegurado (5 dígitos)
+ *         example: "12345"
+ *       - in: query
+ *         name: status
+ *         schema:
+ *           type: string
+ *           enum: ['pending', 'confirmed', 'completed', 'cancelled', 'failed']
+ *         description: Filtrar por estado de la cita
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *           minimum: 1
+ *           maximum: 100
+ *         description: Límite de resultados (máximo 100)
+ *     responses:
+ *       200:
+ *         description: Lista de citas del asegurado
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/GetAppointmentsResponse'
+ *       400:
+ *         description: Error de validación
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       500:
+ *         description: Error interno del servidor
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ */
+
 export const handler = async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
   logger.info('Processing appointment request', {
     httpMethod: event.httpMethod,
@@ -41,7 +131,15 @@ export const handler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPr
 
 async function handleCreateAppointment(event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> {
   try {
+    logger.info('Processing create appointment request', {
+      body: event.body,
+      headers: event.headers,
+      httpMethod: event.httpMethod
+    });
+
     const requestBody = RequestValidator.parseRequestBody(event.body) as CreateAppointmentRequestDTO;
+    
+    logger.info('Parsed request body', { requestBody });
 
     if (!requestBody.insuredId || !requestBody.scheduleId || !requestBody.countryISO) {
       return ResponseBuilder.badRequest('Campos requeridos: insuredId, scheduleId, countryISO');
